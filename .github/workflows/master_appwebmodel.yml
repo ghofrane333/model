@@ -28,24 +28,19 @@ jobs:
           python -m venv venv
           source venv/bin/activate
           pip install -r requirements.txt
-
+        
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
 
       - name: Zip artifact for deployment
-        run: |
-          cd app
-          zip -r ../release.zip ./*
-          ls -l ../release.zip  # Vérifiez que le fichier ZIP a bien été créé
-
-      - name: Move zip file to current directory
-        run: |
-          mv ../release.zip .
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
+          path: |
+            release.zip
+            !venv/
 
   deploy:
     runs-on: ubuntu-latest
@@ -65,16 +60,19 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
+        
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FEB51231D58A4EB2A528B08B3A04E4F9 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B0E998AF70BB41238BC5FC694098A1B8 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1814D44B8D2743CBA21474C243060C12 }}
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'appwebmodel'
           slot-name: 'Production'
-          package: release.zip
+          package: release.zip 
