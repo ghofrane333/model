@@ -60,7 +60,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -73,7 +72,7 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'appwebmodel'
-          package: release.zip  # Utilisez release.zip directement
-          deployment-method: 'zipDeploy'  # Forcer l'utilisation de zipDeploy
+          slot-name: 'Production'
+          package: release.zip  # Use the zipped package for deployment
 
           
