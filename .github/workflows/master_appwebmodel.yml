@@ -73,5 +73,7 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'appwebmodel'
-          slot-name: 'Production'
+          package: release.zip  # Utilisez release.zip directement
+          deployment-method: 'zipDeploy'  # Forcer l'utilisation de zipDeploy
+
           
