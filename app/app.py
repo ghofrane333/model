@@ -81,7 +81,7 @@ def pred_model():
     except Exception as e:
         return jsonify({'error': f'Erreur lors de la génération des prédictions: {str(e)}'}), 500
 
-if __name__ == "__app__":
+if __name__ == "__main__":
     port = int(os.environ.get('PORT', 8000))  # Changer ici pour 8000
     app.run(host='0.0.0.0', port=port)
 
