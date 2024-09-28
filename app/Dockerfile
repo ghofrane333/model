@@ -13,7 +13,7 @@ RUN pip install -r /app/requirements.txt
 EXPOSE 5000
 
 # Commande pour démarrer l'application
-CMD ["python", "main.py"]
+CMD ["python", "app.py"]
 
 
 
