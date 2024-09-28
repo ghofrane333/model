@@ -1,7 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
 name: Build and deploy Python app to Azure Web App - appwebmodel
 
 on:
@@ -24,18 +20,20 @@ jobs:
 
       - name: Create and start virtual environment
         run: |
-          cd app
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+          cd app  # Aller dans le dossier app
+          python -m venv venv  # Créer un environnement virtuel
+          source venv/bin/activate  # Activer l'environnement
+          pip install -r requirements.txt  # Installer les dépendances
 
-      
-    
-        
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+      # Example: 
+      # - name: Run tests
+      #   run: pytest
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          cd app  # Assurez-vous d'être dans le bon répertoire
+          zip -r ../release.zip ./*  # Zip tout dans app
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -43,7 +41,7 @@ jobs:
           name: python-app
           path: |
             release.zip
-            !venv/
+            !app/venv/  # Exclure l'environnement virtuel du fichier zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,7 +61,6 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -77,4 +74,3 @@ jobs:
         with:
           app-name: 'appwebmodel'
           slot-name: 'Production'
-          
