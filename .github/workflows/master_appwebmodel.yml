@@ -39,5 +39,5 @@ jobs:
       with: 
         app-name: 'appwebmodel'
         slot-name: 'production'
-        publish-profile: ${{ secrets.secret }}
+        publish-profile: ${{ secrets.azure_web }}
         package: 'app'
