@@ -1,54 +1,43 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - appwebmodel
+name: 'Build and deploy Flask app to Azure Web App: appwebmodel'
 
 on:
   push:
     branches:
-      - master
+    - master
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v2
 
-      - name: Set up Python version
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
+    - name: Set up Python version
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.9'
     
-      - name: Install dependencies
-        run: |
-         cd app
-         pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        cd app
+        pip install -r requirements.txt
     
-      - name: Build using AppService-Build
-        uses: azure/appservice-build@v2
-        with:
-         platform: python
-         platform-version: '3.9'
-         app-location: 'app'
-         
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-        
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FEB51231D58A4EB2A528B08B3A04E4F9 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B0E998AF70BB41238BC5FC694098A1B8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1814D44B8D2743CBA21474C243060C12 }} 
-          
-      - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v2
-        with: 
-         app-name: 'appwebmodel'
-         slot-name: 'production'
-         package: 'app'
-      
-      
-
-     
+    - name: Build using AppService-Build
+      uses: azure/appservice-build@v2
+      with:
+        platform: python
+        platform-version: '3.9'
+        # Spécifiez le chemin d'accès à votre application
+        app-path: 'app'
+    
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: 'appwebmodel'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.secret }}
+        package: 'app'
