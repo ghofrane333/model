@@ -22,26 +22,21 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Create and start virtual environment
+      - name: Change directory to app
+        run: cd app
+    
+      - name: Install dependencies
         run: |
-          cd app
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
-
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
-      - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v4
+         cd app
+         pip install -r requirements.txt
+    
+      - name: Build using AppService-Build
+        uses: azure/appservice-build@v2
         with:
-          name: python-app
-          path: |
-            release.zip
-            !venv/
-
+         platform: python
+         platform-version: '3.9'
+         app-location: 'app'
+        
   deploy:
     runs-on: ubuntu-latest
     needs: build
