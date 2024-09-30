@@ -21,9 +21,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-
-      - name: Change directory to app
-        run: cd app
     
       - name: Install dependencies
         run: |
@@ -36,38 +33,22 @@ jobs:
          platform: python
          platform-version: '3.9'
          app-location: 'app'
-        
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      id-token: write #This is required for requesting the JWT
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: python-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
-
-      
+         
       - name: Login to Azure
         uses: azure/login@v2
         with:
         
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_FEB51231D58A4EB2A528B08B3A04E4F9 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B0E998AF70BB41238BC5FC694098A1B8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1814D44B8D2743CBA21474C243060C12 }}
-
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_1814D44B8D2743CBA21474C243060C12 }} 
+          
       - name: 'Deploy to Azure Web App'
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'appwebmodel'
-          slot-name: 'Production'
-          package: release.zip 
+        uses: azure/webapps-deploy@v2
+        with: 
+         app-name: 'appwebmodel'
+         slot-name: 'production'
+         package: 'app'
+      
+      
+
+     
