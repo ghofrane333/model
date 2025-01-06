@@ -50,6 +50,22 @@ def predict_client(ID):
     st.success(f"Probabilité de défaut de paiement: {probability_default_payment:.4f}")
     st.write(f"Prédiction: {prediction}")
 
+# Fonction pour calculer le nombre de personnes à risque
+def calculer_risque(df, model, seuil=0.625):
+    X = df.drop(['SK_ID_CURR'], axis=1)
+    # Préparer les données (similaire à la fonction 'verifier_donnees_client')
+    expected_columns = model.feature_name_
+    missing_cols = set(expected_columns) - set(X.columns)
+    for col in missing_cols:
+        X[col] = 0
+    X = X[expected_columns]
+    
+    # Prédire les probabilités de défaut
+    probas = model.predict_proba(X)[:, 1]
+    # Compter le nombre de clients avec une probabilité supérieure au seuil
+    clients_risque = np.sum(probas >= seuil)
+    return clients_risque, len(df), probas
+
 # Interface utilisateur Streamlit
 st.sidebar.header("Entrez l'ID client")
 client_id = st.sidebar.text_input("ID client", "")
@@ -88,5 +104,8 @@ def predict_all_clients():
 if st.button("Afficher les prédictions pour tous les clients"):
     predict_all_clients()
 
-
-
+# Calculer et afficher le nombre de personnes à risque
+if st.button("Calculer le nombre de personnes à risque"):
+    clients_risque, total_clients, _ = calculer_risque(df, model)
+    st.write(f"Nombre total de clients : {total_clients}")
+    st.write(f"Nombre de clients à risque (probabilité >= seuil) : {clients_risque}")
