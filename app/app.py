@@ -1,10 +1,8 @@
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
 import os
-
-app = Flask(__name__)
 
 # Charger le modèle LightGBM
 model_path = os.path.join(os.path.dirname(__file__), 'model', 'lgbm_model.pkl')
@@ -15,27 +13,17 @@ data_path = os.path.join(os.path.dirname(__file__), 'model', 'test_data.csv')
 df = pd.read_csv(data_path)
 df['SK_ID_CURR'] = df['SK_ID_CURR'].astype(int)  # S'assurer que les IDs sont des entiers
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Titre de l'application
+st.title("Prédiction de crédit")
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    all_id_client = list(df['SK_ID_CURR'].unique())
+# Fonction pour la prédiction d'un client spécifique
+def predict_client(ID):
     seuil = 0.625
-
-    # Récupérer l'ID client du formulaire
-    data = request.form
-    ID = data.get('id_client', '')
-
-    try:
-        ID = int(ID)  # Convertir l'ID en entier
-    except ValueError:
-        return jsonify({"error": "ID invalide"}), 400
 
     # Vérifier si l'ID existe dans la base de données
     if df[df['SK_ID_CURR'] == ID].empty:
-        return jsonify({"error": "Ce client n'est pas répertorié"}), 404
+        st.error("Ce client n'est pas répertorié")
+        return
 
     # Extraire les données du client
     X = df[df['SK_ID_CURR'] == ID].drop(['SK_ID_CURR'], axis=1)
@@ -48,23 +36,33 @@ def predict():
     X = X[expected_columns]
 
     if X.shape[1] != model.n_features_in_:
-        return jsonify({
-            "error": "Nombre de caractéristiques incorrect",
-            "expected_features_count": model.n_features_in_,
-            "received_features_count": X.shape[1]
-        }), 400
+        st.error(f"Nombre de caractéristiques incorrect: attendu {model.n_features_in_}, reçu {X.shape[1]}")
+        return
 
     # Prédiction
     try:
         probability_default_payment = model.predict_proba(X)[:, 1][0]
     except Exception as e:
-        return jsonify({'error': f'Erreur lors de la prédiction: {str(e)}'}), 500
+        st.error(f"Erreur lors de la prédiction: {str(e)}")
+        return
 
     prediction = "Prêt NON Accordé, risque de défaut" if probability_default_payment >= seuil else "Prêt Accordé"
-    return jsonify({"probability": probability_default_payment, "prediction": prediction})
+    st.success(f"Probabilité de défaut de paiement: {probability_default_payment:.4f}")
+    st.write(f"Prédiction: {prediction}")
 
-@app.route('/prediction_complete')
-def pred_model():
+# Interface utilisateur Streamlit
+st.sidebar.header("Entrez l'ID client")
+client_id = st.sidebar.text_input("ID client", "")
+
+if client_id:
+    try:
+        client_id = int(client_id)
+        predict_client(client_id)
+    except ValueError:
+        st.error("L'ID client doit être un nombre entier")
+
+# Fonction pour prédire pour tous les clients
+def predict_all_clients():
     try:
         Xtot = df.drop(['SK_ID_CURR'], axis=1)
         seuil = 0.625
@@ -76,13 +74,19 @@ def pred_model():
         df_pred['Proba'] = y_pred
         df_pred['PREDICTION'] = y_seuil
 
-        return df_pred.to_json(orient='index')
-
+        st.write(df_pred[['SK_ID_CURR', 'Proba', 'PREDICTION']].head())
+        st.download_button(
+            label="Télécharger les prédictions",
+            data=df_pred.to_csv(index=False),
+            file_name="predictions.csv",
+            mime="text/csv"
+        )
     except Exception as e:
-        return jsonify({'error': f'Erreur lors de la génération des prédictions: {str(e)}'}), 500
+        st.error(f"Erreur lors de la génération des prédictions: {str(e)}")
 
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 8000))  # Changer ici pour 8000
-    app.run(host='0.0.0.0', port=port)
+# Afficher les prédictions pour tous les clients
+if st.button("Afficher les prédictions pour tous les clients"):
+    predict_all_clients()
+
 
 
